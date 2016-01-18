@@ -13,7 +13,7 @@ function Compile
     mkdir('build');
     delete(['build' filesep '*']);
     mcc('-m','Interface.m', ...
-        '-C', '-v', '-m', '-d', 'build', '-o', 'Organotypic_Invasion_Scoring');
+        '-v', '-m', '-d', 'build', '-o', 'Organotypic_Invasion_Scoring');
         
     if ispc
         ext = '.exe';
@@ -27,7 +27,7 @@ function Compile
     if ismac
         mkdir(['build' filesep 'dist']);
         movefile(['build' filesep new_file ext], ['build' filesep 'dist' filesep new_file ext]);
-        cmd = ['hdiutil create "./build/' new_file '.dmg" -srcfolder ./build/dist/ -ov'];
+        cmd = ['hdiutil create "./build/' new_file '.dmg" -srcfolder ./build/dist/ -volname "' new_file '" -ov'];
         disp(cmd)
         system(cmd)
     end
