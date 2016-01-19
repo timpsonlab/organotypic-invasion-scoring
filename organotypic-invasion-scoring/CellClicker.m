@@ -9,7 +9,7 @@ function CellClicker
     mpp = 0.4971; % default if not saved in file
     
     [fh,ax] = SetupPanel({},[],@OptionCallback,...
-    [{'Select Folder...','Select Border','Clear Cells'} cell_types {'<<','>>'}],@ButtonCallback);
+    [{'Select Folder...','Select Border','Clear Cells','Undo Click'} cell_types {'<<','>>'}],@ButtonCallback);
     
     
     mode = '';
@@ -25,6 +25,7 @@ function CellClicker
     idx = 1;
     mask_im = [];
     options = [];
+    undo = [];
     
     border_line = line(0,0,'Marker','x','Color','m');
     
@@ -89,7 +90,7 @@ function CellClicker
        
         filename = [folder files(idx).name];
         filename = strrep(filename, '.tif', '-seg.mat');
-        save(filename,'border_p','cells_p','mpp');
+        save(filename,'border_p','cells_p','mpp','undo');
         
     end
 
@@ -107,6 +108,9 @@ function CellClicker
             cells_p = r.cells_p;
             if ~iscell(cells_p)
                 cells_p = {r.top_cells_p, [], r.cells_p, []};
+            end
+            if isfield(r,'undo')
+                undo = r.undo;
             end
         end
         
@@ -195,7 +199,18 @@ function CellClicker
             case '<<'
                 Save();
                 idx = mod(idx-2,length(files))+1;
-                OpenFile();                
+                OpenFile();
+            case 'Undo Click'
+                if ~isempty(undo)
+                    u = undo(end);
+                    undo = undo(1:end-1);
+                    if ~isnan(u)
+                        cells_p{u} = cells_p{u}(1:end-1,:);
+                    else
+                        border_p = border_p(1:end-1,:);
+                    end
+                end
+                UpdateLines();     
         end
         UpdateLines();
     end
@@ -206,12 +221,14 @@ function CellClicker
         for i=1:length(cell_types)
             if strcmp(mode, cell_types{i})
                 cells_p{i}(end+1,:) = [x,y];
+                undo(end+1) = i;
             end
         end
         
         switch mode
             case 'Select Border'
                 border_p(end+1,:) = [x,y];
+                undo(end+1) = nan;
         end
         UpdateLines();
     end

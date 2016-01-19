@@ -31,10 +31,14 @@ function Interface()
 
     function CallbackWrapper(callback)
        
-        try 
+        if isdeployed
+            try 
+                callback();
+            catch e
+                errordlg([e.stack(1).file ', line ' num2str(e.stack(1).line)],e.message);
+            end
+        else
             callback();
-        catch e
-            errordlg([e.stack(1).file ', line ' num2str(e.stack(1).line)],e.message);
         end
         
     end
