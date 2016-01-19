@@ -5,6 +5,13 @@ function Compile
     ver = ver(1:end-1);
     is_release = isempty(regexp(ver,'-\d-+[a-z0-9]+','ONCE'));
 
+    % Get GUI extras
+    if ~exist('uiextras.VBox','class')
+        websave('guilayout.zip','http://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/47982/versions/6/download/zip')
+        unzip('guilayout.zip');
+        addpath('layout');
+    end
+    
     % Build App
     try
     rmdir('build','s');
@@ -14,7 +21,7 @@ function Compile
     mkdir('build');
     delete(['build' filesep '*']);
     mcc('-m','Interface.m', ...
-        '-v', '-m', '-d', 'build', '-o', 'Organotypic_Invasion_Scoring');
+        '-v', '-d', 'build', '-o', 'Organotypic_Invasion_Scoring');
         
     if ispc
         ext = '.exe';

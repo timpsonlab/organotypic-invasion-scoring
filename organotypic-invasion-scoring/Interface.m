@@ -1,6 +1,6 @@
 function Interface()
 
-    fh = figure('ToolBar','none','Name','Invasion Processing','NumberTitle','off','MenuBar','none');
+    fh = figure('ToolBar','none','Name','Organotypic Invasion Scoring','NumberTitle','off','MenuBar','none');
     
     pos = get(fh,'Position');
     pos(3:4) = [400,600];
