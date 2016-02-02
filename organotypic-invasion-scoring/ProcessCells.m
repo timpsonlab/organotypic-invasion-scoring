@@ -83,9 +83,17 @@ function [p] = ProcessCells(r)
     p = struct;
     p.NumInvaded = n_cells;
     p.NumTop = n_top;
-    p.InvasionIndex = n_cells / (n_cells + n_top);
-    p.MeanInvasionDepth = mean(corrected_cells_y);
-    p.WeightedInvasionIndex = p.MeanInvasionDepth * p.InvasionIndex;
+    
+    if n_cells + n_top == 0
+        p.InvasionIndex = 0;
+        p.MeanInvasionDepth = 0;
+        p.WeightedInvasionIndex = 0;
+    else
+        p.InvasionIndex = n_cells / (n_cells + n_top);
+        p.MeanInvasionDepth = mean(corrected_cells_y);
+        p.WeightedInvasionIndex = p.MeanInvasionDepth * p.InvasionIndex;
+    end
+    
     %p.MeanClusterSize = mean(cluster_size);
     %p.NumClusters = n_clusters;
     %p.FractionClustered = total_clustered / n_cells;
