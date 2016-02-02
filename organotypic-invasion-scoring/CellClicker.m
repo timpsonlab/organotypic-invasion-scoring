@@ -36,7 +36,7 @@ function CellClicker
     SelectFolder();
     
     function SelectFolder()
-        folder = uigetdir(folder);
+        folder = GetFolderWithMemory();
         folder = [folder filesep];
         files = dir([folder '*.tif']);
         

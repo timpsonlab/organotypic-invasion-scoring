@@ -4,7 +4,7 @@ function CountEmBaby(process_function)
         process_function = @ProcessCells;
     end
 
-    folder = uigetdir('Choose Folder...');
+    folder = GetFolderWithMemory();
     folder = [folder filesep];
     
     files = dir([folder '*-seg.mat']);

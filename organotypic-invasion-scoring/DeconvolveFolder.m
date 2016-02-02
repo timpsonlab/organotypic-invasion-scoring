@@ -1,7 +1,7 @@
 function DeconvolveFolder(folder)
 
     if (nargin < 1)
-        folder = uigetdir('Choose Folder...');
+        folder = GetFolderWithMemory();
         folder = [folder filesep];
     end
         

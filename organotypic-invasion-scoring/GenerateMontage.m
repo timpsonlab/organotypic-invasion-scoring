@@ -1,6 +1,6 @@
 function GenerateMontage()
 
-folder = uigetdir('','Choose Folder...');
+folder = GetFolderWithMemory();
 folder = [folder filesep];
 
 image_names = dir([folder '*.tif']);

@@ -1,5 +1,11 @@
 function Interface()
 
+    if ispc;
+        javax.swing.UIManager.setLookAndFeel('com.sun.java.swing.plaf.windows.WindowsLookAndFeel');
+    else ismac;
+        javax.swing.UIManager.setLookAndFeel('com.apple.laf.AquaLookAndFeel');
+    end
+
     fh = figure('ToolBar','none','Name','Organotypic Invasion Scoring','NumberTitle','off','MenuBar','none');
     
     pos = get(fh,'Position');

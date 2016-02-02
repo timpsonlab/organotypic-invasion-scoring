@@ -1,7 +1,7 @@
 function [depth_N,depth_F,xx] = CountDAB(process_function, folder, n_avg)
 
     if (nargin < 2)
-        folder = uigetdir('Choose Folder...');
+        folder = GetFolderWithMemory();
         folder = [folder filesep];
     end
     
