@@ -1,15 +1,16 @@
 function CellClicker
-
-    folder = '';
+        
+    folder = [];
     files = [];
     im = [];
+    only_top_half = false;
 
     cell_types = {'Top Positive', 'Top Negative', 'Invasive Positive', 'Invasive Negative'};
-    cell_colours = {'c', 'g', 'y', 'r'};
+    cell_colours = {[55,126,184]/255,[228,26,28]/255,[77,175,74]/255,[152,78,163]/255}; % from colorbrewer
     mpp = 0.4971; % default if not saved in file
     
     [fh,ax] = SetupPanel({},[],@OptionCallback,...
-    [{'Select Folder...','Select Border','Clear Cells','Undo Click'} cell_types {'<<','>>'}],@ButtonCallback);
+    [{'Select Folder...','Select Border','Clear Cells','Undo Click'} cell_types {'<<','>>','Show All','Zoom Top'}],@ButtonCallback);
     
     
     mode = '';
@@ -30,7 +31,7 @@ function CellClicker
     border_line = line(0,0,'Marker','x','Color','m');
     
     for j=1:length(cell_types)
-        cell_line(j) = line(0,0,'Marker','x','MarkerSize',7,'Color',cell_colours{j},'LineStyle','none');
+        cell_line(j) = line(0,0,'Marker','*','MarkerSize',7,'Color',cell_colours{j},'LineStyle','none');
     end
     
     SelectFolder();
@@ -68,14 +69,18 @@ function CellClicker
         mask_im = image(c,'AlphaData',alpha);
         hold off;
         daspect([1 1 1]);
-
+        
+        if only_top_half
+            ylim([1 sz(1)/2])
+        end
+        
         border_p = [];
         cells_p = {};
         
-        border_line = line(0,0,'Marker','x','Color','m');
+        border_line = line(0,0,'Marker','.','Color','m','Parent',ax);
         
         for i=1:length(cell_types)
-            cell_line(i) = line(0,0,'Marker','x','MarkerSize',7,'Color',cell_colours{i},'LineStyle','none');
+            cell_line(i) = line(0,0,'Marker','*','MarkerSize',6,'Color',cell_colours{i},'LineStyle','none','Parent',ax);
             cells_p{i} = [];
         end
         
@@ -88,6 +93,10 @@ function CellClicker
 
     function Save()
        
+        if isempty(border_p) && all(cellfun(@isempty,cells_p))
+            return
+        end
+        
         filename = [folder files(idx).name];
         filename = strrep(filename, '.tif', '-seg.mat');
         save(filename,'border_p','cells_p','mpp','undo');
@@ -158,6 +167,15 @@ function CellClicker
             case 'b'
                 mode = 'Select Border';
                 set(fh, 'Pointer', 'crosshair');
+            case 'rightarrow'
+                Save();
+                idx = mod(idx,length(files))+1;
+                OpenFile();
+            case 'leftarrow'
+                Save();
+                idx = mod(idx-2,length(files))+1;
+                OpenFile();
+                
         end
 
         function kludge()
@@ -183,11 +201,11 @@ function CellClicker
     end
 
     function ButtonCallback(button)
-        mode = button;
-        disp(mode);
-        switch mode
+        disp(button);
+        switch button
             case 'Select Border'
                 border_p = [];
+                mode = button;
             case 'Select Folder...'
                 SelectFolder();
             case 'Clear Cells' 
@@ -200,6 +218,14 @@ function CellClicker
                 Save();
                 idx = mod(idx-2,length(files))+1;
                 OpenFile();
+            case 'Zoom Top'
+                only_top_half = true;
+                Save();
+                OpenFile();
+            case 'Show All'
+                only_top_half = false;
+                Save();
+                OpenFile();
             case 'Undo Click'
                 if ~isempty(undo)
                     u = undo(end);
@@ -211,6 +237,9 @@ function CellClicker
                     end
                 end
                 UpdateLines();     
+            otherwise
+                mode = button;
+        
         end
         UpdateLines();
     end
