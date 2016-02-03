@@ -31,11 +31,20 @@ function [p] = ProcessPositiveNegativeCells(r)
     % Get Depth
     [border_x, border_y] = GetSortedBorder(r);
     
-    border_c_y = interp1(border_x,border_y,inv_cells_pos_x,'linear','extrap');
-    inv_cells_pos_y = (inv_cells_pos_y - border_c_y) * r.mpp;
+    if isempty(border_x)
+        inv_cells_pos_y = (inv_cells_pos_y) * r.mpp;
+        inv_cells_neg_y = (inv_cells_neg_y) * r.mpp;
 
-    border_c_y = interp1(border_x,border_y,inv_cells_neg_x,'linear','extrap');
-    inv_cells_neg_y = (inv_cells_neg_y - border_c_y) * r.mpp;
+        msgbox(['Warning: Image "' r.name '" does not have border, not correcting depth']);
+    else
+        border_c_y = interp1(border_x,border_y,inv_cells_pos_x,'linear','extrap');
+        inv_cells_pos_y = (inv_cells_pos_y - border_c_y) * r.mpp;
+
+        border_c_y = interp1(border_x,border_y,inv_cells_neg_x,'linear','extrap');
+        inv_cells_neg_y = (inv_cells_neg_y - border_c_y) * r.mpp;
+    end
+
+    
     
     
     n_top_pos = length(top_cells_pos_x);

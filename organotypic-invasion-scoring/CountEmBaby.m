@@ -31,6 +31,7 @@ function CountEmBaby(process_function)
                 r.mpp = 0.4971; % old file without resolution - assume 20X
             end
             
+            r.name = sel_names{j};
             p(j) = process_function(r);
         end
 
@@ -38,6 +39,12 @@ function CountEmBaby(process_function)
         q = table();
         for k=1:length(fields)
             f = [p.(fields{k})];
+            
+            if mod(length(f),n_avg) ~= 0
+                n_pad = n_avg - mod(length(f),n_avg);
+                f = [f nan(1,n_pad)];
+            end
+            
             f = reshape(f, [n_avg, length(f)/n_avg]);
             f = mean(f,1);
             q.(fields{k}) = f';

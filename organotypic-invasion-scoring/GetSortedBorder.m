@@ -1,5 +1,11 @@
 function [border_x,border_y] = GetSortedBorder(r)
 
+    if isempty(r.border_p)
+        border_x = [];
+        border_y = [];
+        return;
+    end
+
     border_x = r.border_p(:,1);
     border_y = r.border_p(:,2);
     

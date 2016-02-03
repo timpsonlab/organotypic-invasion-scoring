@@ -6,8 +6,8 @@ function [p] = ProcessCells(r)
     end
 
     if iscell(r.cells_p)
-        r.top_cells_p = [r.cells_p{1}, r.cells_p{2}];
-        r.cells_p = [r.cells_p{3}, r.cells_p{4}];
+        r.top_cells_p = [r.cells_p{1}; r.cells_p{2}];
+        r.cells_p = [r.cells_p{3}; r.cells_p{4}];
     end
     
     if isfield(r,'top_p') && ~isfield(r,'border_p')
@@ -73,9 +73,15 @@ function [p] = ProcessCells(r)
     
     % Get Depth
     [border_x, border_y] = GetSortedBorder(r);
+
+    if isempty(border_x)
+        corrected_cells_y = cells_y * r.mpp;
+        msgbox(['Warning: Image "' r.name '" does not have border, not correcting depth']);
+    else
+        border_c_y = interp1(border_x,border_y,cells_x,'linear','extrap');
+        corrected_cells_y = (cells_y - border_c_y) * r.mpp;
+    end
     
-    border_c_y = interp1(border_x,border_y,cells_x,'linear','extrap');
-    corrected_cells_y = (cells_y - border_c_y) * r.mpp;
     
     d = [0 100 200 300 400 500 Inf];
     h = histcounts(corrected_cells_y,d);
