@@ -12,6 +12,7 @@ function [depth_N,depth_F,xx] = CountDAB(process_function, folder, n_avg)
     
     files = dir([folder '*-seg.mat']);
     names = {files.name};
+    names = sort_nat(names);
     block_id = cellfun(@(n) n(1:4), names, 'UniformOutput', false);
 
     

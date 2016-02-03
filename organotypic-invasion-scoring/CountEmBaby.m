@@ -9,6 +9,7 @@ function CountEmBaby(process_function)
     
     files = dir([folder '*-seg.mat']);
     names = {files.name};
+    names = sort_nat(names);
     block_id = cellfun(@(n) n(1:4), names, 'UniformOutput', false);
 
     a = inputdlg('Number of images per plug:','Averaging',1,{'3'});

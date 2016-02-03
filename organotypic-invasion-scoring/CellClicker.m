@@ -42,6 +42,7 @@ function CellClicker
         files = dir([folder '*.tif']);
         
         names = {files.name};
+        names = sort_nat(names);
         sel = cellfun(@(f) (f(1)~='.'), names);
         files = files(sel);
         
