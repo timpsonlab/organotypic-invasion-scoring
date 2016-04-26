@@ -4,13 +4,14 @@ function CellClicker
     files = [];
     im = [];
     only_top_half = false;
+    use_deconvolution = false;
 
     cell_types = {'Top Positive', 'Top Negative', 'Invasive Positive', 'Invasive Negative'};
     cell_colours = {[55,126,184]/255,[228,26,28]/255,[77,175,74]/255,[152,78,163]/255}; % from colorbrewer
     mpp = 0.4971; % default if not saved in file
     
     [fh,ax] = SetupPanel({},[],@OptionCallback,...
-    [{'Select Folder...','Select Border','Clear Cells','Undo Click'} cell_types {'<<','>>','Show All','Zoom Top'}],@ButtonCallback);
+    [{'Select Folder...','Select Border','Clear Cells','Undo Click'} cell_types {'<<','>>','Show All','Zoom Top','Color:Normal','Color:Deconvolved'}],@ButtonCallback);
     
     
     mode = '';
@@ -56,6 +57,10 @@ function CellClicker
         im = imread(filename);
         info = imfinfo(filename);
         
+        if use_deconvolution
+            im = HEDDeconvolution(im);
+        end
+
         xresolution = info.XResolution;
         if xresolution ~= 72 
             mpp = 1/(1e-4 * xresolution);
@@ -238,6 +243,14 @@ function CellClicker
                     end
                 end
                 UpdateLines();     
+            case 'Color:Normal'
+                use_deconvolution = false;
+                Save();
+                OpenFile();
+            case 'Color:Deconvolved'
+                use_deconvolution = true;
+                Save();
+                OpenFile();
             otherwise
                 mode = button;
         
