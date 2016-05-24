@@ -1,13 +1,16 @@
 function TMAExtractor()
-    %folder = '/Volumes/Seagate Backup Plus Drive/Histology Data/TMAs/anti-Lox/';
-    %file = 'anti-Lox TMA#3.svs';
+    %folder = '/Volumes/Sean ExFAT/Histology Data/ICGC TMA Picro/Slides/';
+    %file = 'ICGC TMA2.svs';
 
     [file,folder] = uigetfile('*.svs');
     
     [im,ratio] = GetOverview([folder file]);
     
-    fh = figure(22);
+    fh = figure(10);
     ax = gca;
+    
+    flip_y = true;
+    flip_x = false;
     
     core_x = [];
     core_y = [];
@@ -18,11 +21,8 @@ function TMAExtractor()
     set(fh, 'WindowButtonDownFcn', @MouseDown);
     set(fh, 'WindowKeyPressFcn', @KeyPress);
 
-    core_line = line(core_x,core_y,'Marker','o','MarkerSize',7,'Color','r','LineStyle','none');
-        
-
-
-    
+    core_line = line(core_x,core_y,'Marker','o','MarkerSize',7,'Color','k','MarkerFaceColor','w','LineStyle','none');
+       
     
      function MouseDown(~,evt)
         [x0,y0] = GetCurrentPoint();
@@ -61,43 +61,28 @@ function TMAExtractor()
 
         imss = imresize(im,1/32);
     
-        OD = -log(double(imss)/255);
+        imsum = max(double(imss)/255,[],3);
+        
+        OD = -log(imsum);
 
         maxel = max(OD(isfinite(OD)));
         OD(~isfinite(OD)) = maxel;
-        OD = min(OD,[],3);
-        OD = OD > 0.12;
+        OD = medfilt2(OD,[5 5]);
+        OD = OD > 1.5*mode(OD(:));
         
-        kern = fspecial('disk',9);
+        SE = strel('disk',2);
+        OD = imdilate(OD,SE);
+        
+        regions = regionprops(OD,'Centroid','Area');
+        
+        area_thresh = 200;
+        areas = [regions.Area];
+        regions = regions(areas>area_thresh);
+        locs = [regions.Centroid];
+        locs = reshape(locs,[2 length(regions)])';
+        x = locs(:,1);
+        y = locs(:,2);
 
-        ODc = conv2(double(OD),kern,'same');
-
-        thresh = graythresh(ODc) * 0.5;
-        ODc(ODc < thresh) = 0;
-        
-        bw = imregionalmax(ODc);
-        
-        idx = find(bw(:));
-        [y,x] = ind2sub(size(bw),idx);
-        m = ODc(idx);
-        
-        X = repmat(x,[1, length(x)]);
-        Y = repmat(y',[length(x) 1]);
-        
-        R = sqrt((X-X').^2 + (Y-Y').^2);
-        R = R < 10 & R > 0;
-        R = triu(R);
-        
-        [M1,M2] = find(R);
-        t = m(M1) > m(M2);
-        
-        sel = true(size(x));
-        sel(M1(~t)) = false;
-        sel(M2(t)) = false;
-        
-        x = x(sel);
-        y = y(sel);
-        
         
         imagesc(imss);
 
@@ -151,7 +136,14 @@ function TMAExtractor()
         r = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};    
         c = (1:sz(1));
         
-        r = repmat({'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'},[sz(1),1]);
+        if flip_y 
+            r = fliplr(r);
+        end
+        if flip_x
+            c = fliplr(c);
+        end
+        
+        r = repmat(r,[sz(1),1]);
         c = repmat(c,[sz(2),1])';
                
         r = r(:);
@@ -161,6 +153,8 @@ function TMAExtractor()
         
         out_folder = [folder '..' filesep 'Extracted Images' filesep];
         mkdir(out_folder);
+        
+        h = waitbar(0);
         
         for i=1:length(core_x)
 
@@ -172,8 +166,8 @@ function TMAExtractor()
             rows = max(rows,1);
             cols = max(cols,1);
 
-            rows = min(rows,size(im,1)*ratio)
-            cols = min(cols,size(im,2)*ratio)
+            rows = min(rows,size(im,1)*ratio);
+            cols = min(cols,size(im,2)*ratio);
 
 
             roi=imread([folder file],'Index',1,'PixelRegion',{rows,cols});
@@ -187,9 +181,11 @@ function TMAExtractor()
             
             imwrite(roi, output_file);
 
+            waitbar(i/length(core_x),h);
             
         end
 
+        close(h)
         beep
         
      end
