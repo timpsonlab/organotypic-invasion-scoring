@@ -2,44 +2,70 @@ function TMAExtractor()
     %folder = '/Volumes/Sean ExFAT/Histology Data/ICGC TMA Picro/Slides/';
     %file = 'ICGC TMA2.svs';
 
-    [file,folder] = uigetfile('*.svs');
-    
-    [im,ratio] = GetOverview([folder file]);
-    
-    fh = figure(10);
-    ax = gca;
-    
-    flip_y = true;
-    flip_x = false;
-    
+    file = [];
+    folder = [];
+
     core_x = [];
     core_y = [];
-    
+
     imss = [];
-    IdentifyCores()
+    im = [];
+    ratio = 1;
+    options = struct();
+    cores_identified = false;
+    names = {};
+    
+    [fh,ax] = SetupPanel({'Num_Rows','Flip_Vert','Flip_Horz','Size'}, {8, false, false, 3000}, @OptionCallback, {'Open...','Identify','Extract'}, @ButtonCallback);
+    set(fh,'Name','TMA Extractor','NumberTitle','off');
         
     set(fh, 'WindowButtonDownFcn', @MouseDown);
-    set(fh, 'WindowKeyPressFcn', @KeyPress);
-
+   
     core_line = line(core_x,core_y,'Marker','o','MarkerSize',7,'Color','k','MarkerFaceColor','w','LineStyle','none');
        
+    function ButtonCallback(button)
+        switch button
+            case 'Open...'
+                OpenFile();
+            case 'Identify'
+                IdentifyCores();
+            case 'Extract'
+                Extract();
+        end
+    end
+
+    function OptionCallback(new_options)
+        options = new_options;        
+    end
+    
+    function OpenFile()
+
+        [file,folder] = uigetfile('*.svs');    
+        [im,ratio] = GetOverview([folder file]);
+        FindCores();        
+        cores_identified = false;
+        
+    end
+    
     
      function MouseDown(~,evt)
-        [x0,y0] = GetCurrentPoint();
+        
+        if ~cores_identified
+            [x0,y0] = GetCurrentPoint();
 
-         if strcmp(get(fh,'SelectionType'),'alt')
-            R = (core_x - x0).^2 + (core_y - y0).^2;
-            [~,idx] = min(R);
-            sel = true(size(core_x));
-            sel(idx) = false;
-            core_x = core_x(sel);
-            core_y = core_y(sel);
-         else
-            core_x = [core_x; x0];
-            core_y = [core_y; y0];
-         end
-         
-         set(core_line,'XData',core_x,'YData',core_y);
+            if strcmp(get(fh,'SelectionType'),'alt')
+                R = (core_x - x0).^2 + (core_y - y0).^2;
+                [~,idx] = min(R);
+                sel = true(size(core_x));
+                sel(idx) = false;
+                core_x = core_x(sel);
+                core_y = core_y(sel);
+            else
+                core_x = [core_x; x0];
+                core_y = [core_y; y0];
+            end
+
+            set(core_line,'XData',core_x,'YData',core_y);
+        end
      end
 
     function [x,y] = GetCurrentPoint()
@@ -48,16 +74,7 @@ function TMAExtractor()
         y = pt(1,2); 
     end
 
-    function KeyPress(~,evt)
-       
-        if strcmp(evt.Key,'e')
-            Process();
-        end
-        
-    end
-
-
-    function IdentifyCores()
+    function FindCores()
 
         imss = imresize(im,1/32);
     
@@ -84,27 +101,35 @@ function TMAExtractor()
         y = locs(:,2);
 
         
-        imagesc(imss);
+        imagesc(imss,'Parent',ax);
+        daspect(ax,[1 1 1]);
+        set(ax,'XTick',[],'YTick',[]);
 
         core_x = x;
         core_y = y;
-    
+        
+        core_line = line(core_x,core_y,'Marker','o','MarkerSize',10,'Color','k','MarkerFaceColor','r','LineStyle','none');
+
     end
             
 
 
-    function Process()
-         
-        if mod(length(core_x),8) ~= 0
-            msgbox([num2str(length(core_x)) ' cores selected, need a multiple of 8!'])
+    function IdentifyCores()
+                 
+        if mod(length(core_x),options.Num_Rows) ~= 0
+            msgbox([num2str(length(core_x)) ' cores selected, need a multiple of ' num2str(options.Num_Rows) '!'])
+            return;
         end
+        
+        cores_identified = true;
+
         
         x = core_x;
         y = core_y;
 
         [~, siy] = sort(y);
 
-        sz = [length(y)/8 8];
+        sz = [length(y)/options.Num_Rows options.Num_Rows];
 
         siy = reshape(siy,sz);
 
@@ -119,27 +144,17 @@ function TMAExtractor()
             idx = [idx; siyj(six)];
 
         end
-        
             
         core_x = core_x(idx);
         core_y = core_y(idx);
-
-        colors = jet(length(core_x));
-        imagesc(imss);
-        hold on;
-        for i=1:length(core_x)
-            plot(core_x(i),core_y(i),'o','Color',colors(i,:),'MarkerFaceColor',colors(i,:),'MarkerSize',10);
-        end
-        hold off;
-            
         
-        r = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};    
+        r = char(64+(1:options.Num_Rows));    
         c = (1:sz(1));
         
-        if flip_y 
+        if options.Flip_Vert 
             r = fliplr(r);
         end
-        if flip_x
+        if options.Flip_Horz
             c = fliplr(c);
         end
         
@@ -149,7 +164,32 @@ function TMAExtractor()
         r = r(:);
         c = c(:);        
         
-        names = cellfun(@(r,c) [r num2str(c,2)], r, num2cell(c), 'UniformOutput', false);
+        names = arrayfun(@(r,c) [r num2str(c,2)], r, c, 'UniformOutput', false);
+
+        imagesc(imss,'Parent',ax);            
+        hold(ax,'on');
+        daspect(ax,[1 1 1]);
+        
+        for i=1:length(core_x)
+
+            w = options.Size / 2 / 32 / ratio;
+            
+            x = (core_x(i)-1) + [-w, w];
+            y = (core_y(i)-1) + [-w, w];
+            
+            plot(ax,[x(1) x(2) x(2) x(1) x(1)],[y(1) y(1) y(2) y(2) y(1)],'k');
+            
+            text(core_x(i),core_y(i),names{i},'HorizontalAlignment','center',...
+                'FontSize',12,'BackgroundColor','k','Color','w')
+        end
+        
+    end
+
+    function Extract()
+
+        if ~cores_identified
+            return;
+        end
         
         out_folder = [folder '..' filesep 'Extracted Images' filesep];
         mkdir(out_folder);
@@ -158,7 +198,7 @@ function TMAExtractor()
         
         for i=1:length(core_x)
 
-            w = 1500;
+            w = options.Size / 2;
             
             rows= (core_y(i)-1) * 32 * ratio + [-w, w];
             cols= (core_x(i)-1) * 32 * ratio + [-w, w];

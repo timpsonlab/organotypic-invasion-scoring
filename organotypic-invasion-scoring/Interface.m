@@ -27,6 +27,7 @@ function Interface()
     AddButton('Automatically Quantify Invasions...', @() CountDAB(@ProcessDAB));
     AddButton('Automatically Quantify Positive/Negative...', @() CountDAB(@ProcessDABPositiveNegative));
     AddButton('Quantify Picrosirius...', @QuantifyPicro);
+    AddButton('Extract TMA Cores from Slides...', @TMAExtractor);
     
     sizes = 50 * ones(1,length(blayout.Children));
     uiextras.Empty('Parent', blayout);
