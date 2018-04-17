@@ -106,15 +106,15 @@ function SlideExtractor()
         idx = 1;
         wh = waitbar(0,'Extracting Regions...');
         for i=1:length(regions)
-            try
+            %try
                 im = GetImage(regions(i).x,regions(i).y);
                 im = AddScaleBar(im, mpp, 50, 10);
                 file_name = strrep(file, '.svs', ['-' num2str(idx, 3) '.tif']);
                 idx = idx + 1;
                 imwrite(im, file_name, 'Resolution', 1/(mpp*1e-4)); % write resolution in px per cm
-            catch e
-                disp(['Could not read region: ' num2str(i)]);
-            end
+            %catch e
+            %    disp(['Could not read region: ' num2str(i)]);
+            %end
                 
             waitbar(i/length(regions),wh);
         end
@@ -191,7 +191,17 @@ function SlideExtractor()
         
         rows=[miny maxy] * ratio;
         cols=[minx maxx] * ratio;
-        roi=imread(file,'Index',1,'PixelRegion',{rows,cols});
+        
+        reader = bfGetReader(file);
+        reader.setSeries(0);
+        roi = uint8.empty();
+        [ round(minx), round(miny), round(maxx-minx), round(maxy-miny)]
+        for i=1:3
+            roi(:,:,i) = bfGetPlane(reader, i, round(minx*ratio), round(miny*ratio), round((maxx-minx)*ratio), round((maxy-miny)*ratio)); 
+        end  
+
+        
+%        roi=imread(file,'Index',1,'PixelRegion',{rows,cols});
 
         angle = atan2(v(2), v(1)) * 180/pi - 90;
         

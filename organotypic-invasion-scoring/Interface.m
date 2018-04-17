@@ -8,10 +8,10 @@ function Interface()
 
     fh = figure('ToolBar','none','Name','Organotypic Invasion Scoring','NumberTitle','off','MenuBar','none');
     
-    pos = get(fh,'Position');
-    pos(3:4) = [400,600];
-    set(fh,'Position',pos);
-    
+    screen_pos = get(0,'ScreenSize');    
+    w = 400; h = 600;
+    pos = [(screen_pos(3) - w) / 2, (screen_pos(4) - h) / 2,w,h];
+    set(fh,'Position',pos);    
     
     layout = uiextras.HBox('Parent',fh);
     

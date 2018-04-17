@@ -1,17 +1,20 @@
 function [im, ratio, microns_per_px] = GetOverview(filename)
-    info = imfinfo(filename);
-    n_pages = length(info);
+
     
-    im = imread(filename, n_pages-3); % get 2nd smallest
+    reader = bfGetReader(filename);
+    meta = reader.getMetadataStore();
+    n_pages = meta.getImageCount();
+    index = n_pages - 4;
+
+    reader.setSeries(index);
+    im = uint8.empty();
+    for i=1:3
+        im(:,:,i) = bfGetPlane(reader, i); 
+    end  
     
-    ratio = info(1).Width / info(n_pages-3).Width;
+    ratio = double(meta.getPixelsSizeX(0).getNumberValue()) / double(meta.getPixelsSizeX(index).getNumberValue());
     
-    info = info(1).ImageDescription;
-    metadata = strsplit(info,'|');  
-    a = regexp(metadata,'MPP = (.+)','tokens');
-    sel = cellfun(@(a) ~isempty(a), a);
-    a = a(sel);
-    microns_per_px = str2double(a{1}{1});
+    microns_per_px = double(meta.getPixelsPhysicalSizeX(0).value());
     
 end
 

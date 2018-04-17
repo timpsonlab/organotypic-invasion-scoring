@@ -2,10 +2,15 @@ function QuantifyPicro()
 
     persistent last_root
     
-    if isempty(last_root)
+    if isempty(last_root) || last_root == 0
         last_root = '';
     end
     root = uigetdir(last_root);
+    
+    if (root == 0)
+        return
+    end
+    
     last_root = root;
     
     

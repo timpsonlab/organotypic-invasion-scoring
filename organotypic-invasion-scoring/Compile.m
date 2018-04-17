@@ -1,5 +1,7 @@
 function Compile
     
+    GetBioformats();
+
     % Get version
     [~,ver] = system('git describe','-echo');
     ver = ver(1:end-1);
@@ -21,6 +23,7 @@ function Compile
     mkdir('build');
     delete(['build' filesep '*']);
     mcc('-m','Interface.m', ...
+        '-a','bfmatlab', ...
         '-v', '-d', 'build', '-o', 'Organotypic_Invasion_Scoring');
         
     if ispc
