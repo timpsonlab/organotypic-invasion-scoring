@@ -108,10 +108,26 @@ function SlideExtractor()
         for i=1:length(regions)
             try
                 im = GetImage(regions(i).x,regions(i).y);
-                im = AddScaleBar(im, mpp, 50, 10);
+                %im = AddScaleBar(im, mpp, 50, 10);
                 file_name = strrep(file, '.svs', ['-' num2str(idx, 3) '.tif']);
                 idx = idx + 1;
-                imwrite(im, file_name, 'Resolution', 1/(mpp*1e-4)); % write resolution in px per cm
+                
+                t = Tiff(file_name,'w');  
+                tagstruct.ImageLength = size(im,1); 
+                tagstruct.ImageWidth = size(im,2);
+                tagstruct.Photometric = Tiff.Photometric.RGB;
+                tagstruct.BitsPerSample = 8;
+                tagstruct.SamplesPerPixel = 3;
+                tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky; 
+                tagstruct.Software = 'Organo Tool'; 
+                tagstruct.ResolutionUnit = Tiff.ResolutionUnit.Centimeter;
+                tagstruct.XResolution = 1/(mpp*1e-4);
+                tagstruct.YResolution = 1/(mpp*1e-4);
+                
+                setTag(t,tagstruct)
+                write(t,im);
+                close(t);
+ 
             catch e
                 disp(['Could not read region: ' num2str(i)]);
             end
