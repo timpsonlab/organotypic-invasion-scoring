@@ -106,15 +106,15 @@ function SlideExtractor()
         idx = 1;
         wh = waitbar(0,'Extracting Regions...');
         for i=1:length(regions)
-            %try
+            try
                 im = GetImage(regions(i).x,regions(i).y);
                 im = AddScaleBar(im, mpp, 50, 10);
                 file_name = strrep(file, '.svs', ['-' num2str(idx, 3) '.tif']);
                 idx = idx + 1;
                 imwrite(im, file_name, 'Resolution', 1/(mpp*1e-4)); % write resolution in px per cm
-            %catch e
-            %    disp(['Could not read region: ' num2str(i)]);
-            %end
+            catch e
+                disp(['Could not read region: ' num2str(i)]);
+            end
                 
             waitbar(i/length(regions),wh);
         end
